@@ -1,7 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { access, readFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
 const root = new URL('../public/workshop/', import.meta.url);
+
+async function createPrototype(hash = '#landing') {
+  const source = await readFile(new URL('mock/index.html', root), 'utf8');
+  const script = source.match(/<script>([\s\S]*)<\/script>/)[1];
+  const app = {innerHTML: ''};
+  const focusTarget = {focusCount: 0, setAttribute() {}, focus() { this.focusCount += 1; }};
+  let hashchange;
+  const context = {
+    location: {hash},
+    document: {
+      body: {className: ''},
+      getElementById: () => app,
+      querySelector: () => focusTarget,
+    },
+    window: {scrollTo() {}},
+    addEventListener(type, listener) { if (type === 'hashchange') hashchange = listener; },
+  };
+  runInNewContext(script, context);
+  return {app, focusTarget, navigate(nextHash) { context.location.hash = nextHash; hashchange(); }};
+}
+
+function contrastRatio(hexA, hexB) {
+  const luminance = hex => {
+    const channels = hex.match(/[\da-f]{2}/gi).map(value => parseInt(value, 16) / 255);
+    const linear = channels.map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+    return .2126 * linear[0] + .7152 * linear[1] + .0722 * linear[2];
+  };
+  const [lighter, darker] = [luminance(hexA), luminance(hexB)].sort((a, b) => b - a);
+  return (lighter + .05) / (darker + .05);
+}
+
 test('prepared copy points to bundled assets and preserves disclosures', async () => {
   const data = JSON.parse(await readFile(new URL('content.json', root), 'utf8'));
   assert.equal(data.team[0].character, 'Female fox');
@@ -12,6 +44,7 @@ test('prepared copy points to bundled assets and preserves disclosures', async (
   await Promise.all(paths.map(p=>access(new URL(p, root))));
   for(const page of ['landing','workspace','results']) await access(new URL(`mock/${page}.png`,root));
 });
+
 test('guide uses prepared assets instead of asking for new portrait generation', async () => {
   const guide = await readFile(new URL('../WORKSHOP-GUIDE.md', import.meta.url),'utf8');
   assert.match(guide, /public\/workshop\/content.json/);
@@ -37,34 +70,40 @@ test('guide uses prepared assets instead of asking for new portrait generation',
   assert.match(guide, /Work on the issue you just created above in this Codex task/);
   assert.doesNotMatch(guide, /^## (?:Step|Task) \d/m);
 });
+
 test('the root opens the connected paper mock', async () => {
   const entry = await readFile(new URL('../index.html', import.meta.url), 'utf8');
   const paper = await readFile(new URL('mock/index.html', root), 'utf8');
   assert.match(entry, /location\.replace\('workshop\/mock\/index\.html'/);
-  for (const page of ['landing', 'workspace', 'results']) {
-    assert.match(paper, new RegExp(`href="#${page}"`));
-    assert.match(paper, new RegExp(`${page}\\.png`));
-  }
+  for (const page of ['landing', 'workspace', 'results']) assert.match(paper, new RegExp(`href="#${page}"`));
+  for (const page of ['workspace', 'results']) assert.match(paper, new RegExp(`${page}\\.png`));
 });
 
-test('the landing route renders the workshop placeholders while keeping the paper journey', async () => {
-  const paper = await readFile(new URL('mock/index.html', root), 'utf8');
-
-  for (const placeholder of [
-    'BRAND_NAME',
-    'TAGLINE_GOES_HERE',
-    'CLIENT_PLACEHOLDER',
-    'TEAM_PLACEHOLDER',
-    'SUPPORTER_PLACEHOLDER',
-    'COMPANY_INFO_GOES_HERE',
-  ]) {
-    assert.match(paper, new RegExp(placeholder));
+test('the landing route renders placeholders and only the annotated header action', async () => {
+  const {app} = await createPrototype();
+  for (const placeholder of ['BRAND_NAME', 'TAGLINE_GOES_HERE', 'COMPANY_INFO_GOES_HERE']) {
+    assert.match(app.innerHTML, new RegExp(placeholder));
   }
+  assert.match(app.innerHTML, /CLIENT_(?:<wbr>)?PLACEHOLDER/);
+  assert.match(app.innerHTML, /TEAM_(?:<wbr>)?PLACEHOLDER/);
+  assert.match(app.innerHTML, /SUPPORTER_(?:<wbr>)?PLACEHOLDER/);
+  assert.match(app.innerHTML, /Simulated-persona hypotheses, not validated human research\./);
+  assert.equal((app.innerHTML.match(/>Open workspace</g) || []).length, 1);
+  assert.doesNotMatch(app.innerHTML.match(/<section class="hero"[\s\S]*?<\/section>/)[0], /Open workspace/);
+});
 
-  assert.match(paper, /Simulated-persona hypotheses, not validated human research\./);
-  assert.match(paper, /href="#workspace"/);
-  assert.match(paper, /href="#results"/);
-  assert.match(paper, /workspace\.png/);
-  assert.match(paper, /results\.png/);
-  assert.doesNotMatch(paper, /logos\/persona-lab\.svg|characters\//);
+test('hash navigation renders the paper journey and moves focus to the new page', async () => {
+  const prototype = await createPrototype();
+  prototype.navigate('#workspace');
+  assert.match(prototype.app.innerHTML, /workspace\.png/);
+  assert.equal(prototype.focusTarget.focusCount, 1);
+  prototype.navigate('#results');
+  assert.match(prototype.app.innerHTML, /results\.png/);
+  assert.equal(prototype.focusTarget.focusCount, 2);
+});
+
+test('the focus indicator meets the three-to-one contrast threshold on white', async () => {
+  const paper = await readFile(new URL('mock/index.html', root), 'utf8');
+  const focus = paper.match(/--focus:\s*(#[\da-f]{6})/i)[1];
+  assert.ok(contrastRatio(focus, '#ffffff') >= 3);
 });

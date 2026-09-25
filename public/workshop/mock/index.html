@@ -13,7 +13,7 @@
         --surface: #eef2f6;
         --accent: #0868e8;
         --accent-dark: #0054c7;
-        --focus: #ffb000;
+        --focus: #7a4a00;
         --page: min(1180px, calc(100% - 64px));
       }
 
@@ -371,7 +371,7 @@
                 <a class="button" href="#workspace">Open workspace</a>
               </div>
             </header>
-            <main class="landing-main">
+            <main class="landing-main" tabindex="-1">
               <section class="hero" aria-labelledby="hero-title">
                 <div><h1 id="hero-title" aria-label="TAGLINE_GOES_HERE">TAGLINE_<wbr>GOES_HERE</h1><p>PRODUCT_DESCRIPTION_GOES_HERE</p></div>
                 <div class="placeholder" aria-label="Hero placeholder">HERO_PLACEHOLDER</div>
@@ -410,18 +410,18 @@
       function paperPage(key) {
         const page = pages[key];
         const hotspots = page.links.map(([target,label,x,y,w,h]) => `<a class="hotspot" href="#${target}" aria-label="${label}" title="${label}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"></a>`).join('');
-        return `<div class="paper-page"><nav class="paper-nav" aria-label="Prototype pages"><span>Paper prototype · click the sketched buttons</span><a href="#landing">Landing</a><a href="#workspace" ${key === 'workspace' ? 'aria-current="page"' : ''}>Workspace</a><a href="#results" ${key === 'results' ? 'aria-current="page"' : ''}>Results</a></nav><p class="hint"><a href="../index.html">Prepared assets + new brand logo</a> · <a href="../instructions.html">Workshop instructions</a><br>Layout sketch only. Use the supplied asset pack for the updated team, branding, and customer stories.</p><main class="paper-main"><div class="sheet"><img src="${page.image}" alt="${page.alt}">${hotspots}</div></main><footer class="paper-footer">Concept preview · fictional content and synthetic sample results</footer></div>`;
+        return `<div class="paper-page"><nav class="paper-nav" aria-label="Prototype pages"><span>Paper prototype · click the sketched buttons</span><a href="#landing">Landing</a><a href="#workspace" ${key === 'workspace' ? 'aria-current="page"' : ''}>Workspace</a><a href="#results" ${key === 'results' ? 'aria-current="page"' : ''}>Results</a></nav><p class="hint"><a href="../index.html">Prepared assets + new brand logo</a> · <a href="../instructions.html">Workshop instructions</a><br>Layout sketch only. Use the supplied asset pack for the updated team, branding, and customer stories.</p><main class="paper-main" tabindex="-1"><div class="sheet"><img src="${page.image}" alt="${page.alt}">${hotspots}</div></main><footer class="paper-footer">Concept preview · fictional content and synthetic sample results</footer></div>`;
       }
 
-      function render() {
+      function render(moveFocus = false) {
         const key = location.hash.slice(1);
         document.getElementById('app').innerHTML = pages[key] ? paperPage(key) : landingPage();
         document.body.className = pages[key] ? 'paper-page' : '';
         window.scrollTo(0, 0);
+        if (moveFocus) document.querySelector('main').focus({preventScroll: true});
       }
 
-      const landingReference = 'landing.png';
-      addEventListener('hashchange', render);
+      addEventListener('hashchange', () => render(true));
       render();
     </script>
   </body>
