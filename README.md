@@ -1,17 +1,31 @@
 # Persona Lab starter
 
-An intentionally low-fidelity, connected React product starter for the Codex Masterclass exercise.
+An intentionally low-fidelity, connected paper prototype for the Codex Masterclass exercise.
 
 For the participant workflow and copyable prompts, see [WORKSHOP-GUIDE.md](./WORKSHOP-GUIDE.md).
 
-Participants improve a complete simulated-persona product flow: map one company platform, edit personas, define tasks, invoke a local demo, inspect evidence-linked friction hypotheses, and compare the result with a neutral baseline.
+Participants turn three connected paper sketches (Landing, Workspace, and Results) into a website using the supplied fictional assets and copy.
 
-## Run locally
+## Preview in your Codex sandbox
 
-```bash
-npm install
-npm run dev
+Ask Codex to start a preview in your sandbox and return a browser-accessible URL. The repository's [agent guidance](AGENTS.md) describes the workshop VM preview setup.
+
+```text
+Start a preview of this Persona Lab starter in my sandbox. Follow the
+repository's preview instructions and give me a browser-accessible URL.
 ```
+
+## Prepared paper prototype and asset pack
+
+The preview opens the paper mock at `/`. You can also visit
+`/workshop/mock/index.html` for the connected
+pencil-sketch mock, `/workshop/index.html` for the supplied brand logo,
+characters, client stories, and supporter logos, and
+`/workshop/instructions.html` for the workshop prompts.
+
+See [the asset map](public/workshop/ASSETS.md). No participant uploads or
+image generation are required. The paper prototype is a design reference,
+not a finished website. There is no separate application mock.
 
 ## Exercise boundaries
 
