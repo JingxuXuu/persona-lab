@@ -46,3 +46,25 @@ test('the root opens the connected paper mock', async () => {
     assert.match(paper, new RegExp(`${page}\\.png`));
   }
 });
+
+test('the landing route renders the workshop placeholders while keeping the paper journey', async () => {
+  const paper = await readFile(new URL('mock/index.html', root), 'utf8');
+
+  for (const placeholder of [
+    'BRAND_NAME',
+    'TAGLINE_GOES_HERE',
+    'CLIENT_PLACEHOLDER',
+    'TEAM_PLACEHOLDER',
+    'SUPPORTER_PLACEHOLDER',
+    'COMPANY_INFO_GOES_HERE',
+  ]) {
+    assert.match(paper, new RegExp(placeholder));
+  }
+
+  assert.match(paper, /Simulated-persona hypotheses, not validated human research\./);
+  assert.match(paper, /href="#workspace"/);
+  assert.match(paper, /href="#results"/);
+  assert.match(paper, /workspace\.png/);
+  assert.match(paper, /results\.png/);
+  assert.doesNotMatch(paper, /logos\/persona-lab\.svg|characters\//);
+});

@@ -1,22 +1,428 @@
 <!doctype html>
 <html lang="en">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Persona Lab — clickable paper prototype</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#ededeb;color:#444;font:14px system-ui}nav{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:12px 20px;background:#fafafa;border-bottom:1px solid #ccc}nav span{margin-right:auto}a{color:inherit}nav a[aria-current=page]{font-weight:700;text-decoration:underline}main{max-width:900px;margin:18px auto 40px}.sheet{position:relative}img{display:block;width:100%;height:auto}.hotspot{position:absolute;display:block;border:2px solid transparent;border-radius:3px}.hotspot:hover,.hotspot:focus-visible{border-color:#555;background:#ffffff45;outline:2px dashed #555;outline-offset:2px}.hint{padding:0 16px;color:#666;text-align:center}footer{text-align:center;padding:16px}button{font:inherit}
-</style>
-<nav aria-label="Prototype pages"><span>Paper prototype · click the sketched buttons</span><a href="#landing">Landing</a><a href="#workspace">Workspace</a><a href="#results">Results</a></nav>
-<p class="hint"><a href="../index.html">Prepared assets + new brand logo</a> · <a href="../instructions.html">Workshop instructions</a><br>Layout sketch only. Use the supplied asset pack for the updated team, branding, and customer stories.</p>
-<main id="preview"></main>
-<footer>Concept preview · fictional content and synthetic sample results</footer>
-<script>
-const pages={
-landing:{image:'landing.png',alt:'Pencil sketch landing page with product introduction, clients, team and supporters.',links:[['workspace','Open workspace',77,4.5,18,3],['workspace','Open workspace',4,20.6,23,3.5],['workspace','View workspace preview',5,47,43,12],['results','View results preview',51,47,43,12]]},
-workspace:{image:'workspace.png',alt:'Pencil sketch of Acme Market workspace showing six pages, a sample task, and recent activity.',links:[['landing','Return to landing page',5,4.5,28,4],['results','Open results',4,24.5,18,4],['results','View example results',28,57,33,5]]},
-results:{image:'results.png',alt:'Pencil sketch sample results with three journey steps and a possible friction finding. Synthetic example, not human research.',links:[['landing','Return to landing page',6,5,28,5],['workspace','Back to workspace',6,11,36,5],['workspace','Back to overview',6,89,42,6]]}
-};
-function render(){let key=location.hash.slice(1);if(!pages[key])key='landing';const p=pages[key];document.getElementById('preview').innerHTML='<div class="sheet"><img src="'+p.image+'" alt="'+p.alt+'">'+p.links.map(([target,label,x,y,w,h])=>'<a class="hotspot" href="#'+target+'" aria-label="'+label+'" title="'+label+'" style="left:'+x+'%;top:'+y+'%;width:'+w+'%;height:'+h+'%"></a>').join('')+'</div>';document.querySelectorAll('nav a').forEach(a=>{if(a.hash==='#'+key)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});window.scrollTo(0,0)}
-addEventListener('hashchange',render);render();
-</script>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Persona Lab — clickable paper prototype</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #101828;
+        --muted: #5e6879;
+        --line: #d8dee8;
+        --surface: #eef2f6;
+        --accent: #0868e8;
+        --accent-dark: #0054c7;
+        --focus: #ffb000;
+        --page: min(1180px, calc(100% - 64px));
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        background: #fff;
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; }
+
+      a:focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 4px;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgb(255 255 255 / 96%);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(12px);
+      }
+
+      .site-header__inner {
+        width: var(--page);
+        min-height: 78px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 32px;
+      }
+
+      .brand {
+        width: fit-content;
+        font-size: 1.125rem;
+        font-weight: 800;
+        letter-spacing: .02em;
+        text-decoration: none;
+      }
+
+      .site-nav {
+        display: flex;
+        align-self: stretch;
+        align-items: center;
+        gap: 34px;
+      }
+
+      .site-nav a {
+        position: relative;
+        display: inline-flex;
+        height: 100%;
+        align-items: center;
+        color: var(--muted);
+        font-size: .9rem;
+        font-weight: 650;
+        text-decoration: none;
+      }
+
+      .site-nav a[aria-current="page"] { color: var(--accent); }
+
+      .site-nav a[aria-current="page"]::after {
+        position: absolute;
+        right: 0;
+        bottom: -1px;
+        left: 0;
+        height: 3px;
+        background: var(--accent);
+        content: "";
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 0 22px;
+        background: var(--accent);
+        color: #fff;
+        font-size: .9rem;
+        font-weight: 750;
+        text-decoration: none;
+        transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+      }
+
+      .button:hover {
+        background: var(--accent-dark);
+        box-shadow: 0 8px 22px rgb(8 104 232 / 18%);
+        transform: translateY(-1px);
+      }
+
+      .site-header .button { justify-self: end; }
+
+      .landing-main { width: var(--page); margin: 0 auto; }
+
+      .hero {
+        display: grid;
+        min-height: 560px;
+        grid-template-columns: 1.35fr .85fr;
+        align-items: center;
+        gap: clamp(48px, 8vw, 112px);
+        padding: 82px 0 72px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .hero > div:first-child { min-width: 0; }
+
+      .hero h1 {
+        max-width: 720px;
+        margin: 0 0 24px;
+        font-size: clamp(3rem, 4.2vw, 3.5rem);
+        line-height: .96;
+        letter-spacing: -.055em;
+        overflow-wrap: anywhere;
+      }
+
+      .hero p {
+        max-width: 590px;
+        margin: 0;
+        color: var(--muted);
+        font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+        line-height: 1.55;
+      }
+
+      .placeholder {
+        display: grid;
+        place-items: center;
+        min-height: 138px;
+        border: 1px solid #e2e7ed;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #f2f5f8, #e2e7ec);
+        color: #667085;
+        font-size: .78rem;
+        font-weight: 650;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        padding: 12px;
+        letter-spacing: .025em;
+        text-align: center;
+      }
+
+      .hero .placeholder { min-height: 360px; }
+
+      .section {
+        padding: 64px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .section h2 {
+        margin: 0 0 32px;
+        font-size: clamp(1.85rem, 3vw, 2.75rem);
+        line-height: 1.05;
+        letter-spacing: -.045em;
+      }
+
+      .placeholder-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 24px;
+      }
+
+      .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .preview-card:first-child {
+        padding-right: 38px;
+        border-right: 1px solid var(--line);
+      }
+
+      .preview-card:last-child { padding-left: 38px; }
+
+      .preview-card .placeholder { min-height: 300px; }
+
+      .preview-card h3 {
+        margin: 24px 0 10px;
+        font-size: 1.45rem;
+        letter-spacing: -.03em;
+      }
+
+      .text-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .text-link::after {
+        content: "→";
+        transition: transform 160ms ease;
+      }
+
+      .text-link:hover::after { transform: translateX(4px); }
+
+      .team-grid { grid-template-columns: repeat(4, 1fr); }
+
+      .team-grid .placeholder { min-height: 230px; }
+
+      .supporters-grid .placeholder { font-size: .625rem; }
+
+      .disclosure {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 24px;
+        align-items: center;
+        margin: 56px 0;
+        border: 1px solid #acd2ff;
+        border-radius: 8px;
+        padding: 24px 30px;
+        background: #eef6ff;
+      }
+
+      .disclosure__icon {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border: 3px solid var(--accent);
+        border-radius: 50%;
+        color: var(--accent);
+        font-size: 1.3rem;
+        font-weight: 850;
+      }
+
+      .disclosure strong { display: block; margin-bottom: 4px; }
+
+      .disclosure p { margin: 0; color: var(--muted); line-height: 1.5; }
+
+      .site-footer {
+        width: var(--page);
+        margin: 0 auto;
+        display: flex;
+        min-height: 138px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        color: var(--muted);
+      }
+
+      .site-footer strong { display: block; margin-bottom: 6px; color: var(--ink); }
+
+      .site-footer nav { display: flex; gap: 26px; }
+
+      .site-footer a { font-size: .85rem; text-decoration: none; }
+
+      .site-footer a:hover { color: var(--accent); }
+
+      .paper-page { margin: 0; background: #ededeb; color: #444; font: 14px system-ui; }
+
+      .paper-nav {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 20px;
+        background: #fafafa;
+        border-bottom: 1px solid #ccc;
+      }
+
+      .paper-nav span { margin-right: auto; }
+      .paper-nav a[aria-current="page"] { font-weight: 700; text-decoration: underline; }
+      .paper-main { max-width: 900px; margin: 18px auto 40px; }
+      .sheet { position: relative; }
+      .sheet img { display: block; width: 100%; height: auto; }
+      .hotspot { position: absolute; display: block; border: 2px solid transparent; border-radius: 3px; }
+      .hotspot:hover, .hotspot:focus-visible { border-color: #555; background: #ffffff45; outline: 2px dashed #555; outline-offset: 2px; }
+      .hint { padding: 0 16px; color: #666; text-align: center; }
+      .paper-footer { padding: 16px; text-align: center; }
+
+      @media (max-width: 760px) {
+        :root { --page: min(100% - 36px, 620px); }
+
+        .site-header__inner {
+          min-height: auto;
+          grid-template-columns: 1fr auto;
+          gap: 0 18px;
+          padding-top: 14px;
+        }
+
+        .site-header .button { min-height: 42px; padding: 0 15px; }
+
+        .site-nav {
+          grid-column: 1 / -1;
+          grid-row: 2;
+          min-height: 48px;
+          justify-content: space-between;
+          gap: 12px;
+        }
+
+        .hero {
+          min-height: auto;
+          grid-template-columns: 1fr;
+          gap: 42px;
+          padding: 62px 0 54px;
+        }
+
+        .hero h1 { font-size: clamp(2.7rem, 14vw, 4.4rem); overflow-wrap: anywhere; }
+        .hero .placeholder { min-height: 260px; }
+        .section { padding: 50px 0; }
+        .placeholder-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+        .clients-grid .placeholder:last-child, .supporters-grid .placeholder:last-child { grid-column: 1 / -1; }
+        .team-grid { grid-template-columns: repeat(2, 1fr); }
+        .team-grid .placeholder { min-height: 190px; }
+        .preview-grid { grid-template-columns: 1fr; gap: 42px; }
+        .preview-card:first-child { padding: 0 0 42px; border-right: 0; border-bottom: 1px solid var(--line); }
+        .preview-card:last-child { padding: 0; }
+        .preview-card .placeholder { min-height: 230px; }
+        .disclosure { grid-template-columns: 1fr; gap: 14px; padding: 22px; }
+        .site-footer { min-height: 180px; align-items: flex-start; flex-direction: column; justify-content: center; }
+        .site-footer nav { width: 100%; justify-content: space-between; gap: 12px; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      const pages = {
+        workspace: {image:'workspace.png', alt:'Pencil sketch of Acme Market workspace showing six pages, a sample task, and recent activity.', links:[['landing','Return to landing page',5,4.5,28,4],['results','Open results',4,24.5,18,4],['results','View example results',28,57,33,5]]},
+        results: {image:'results.png', alt:'Pencil sketch sample results with three journey steps and a possible friction finding. Synthetic example, not human research.', links:[['landing','Return to landing page',6,5,28,5],['workspace','Back to workspace',6,11,36,5],['workspace','Back to overview',6,89,42,6]]}
+      };
+
+      const placeholders = (label, count, extraClass = '') => Array.from({length: count}, () => `<div class="placeholder ${extraClass}">${label.replace('_', '_<wbr>')}</div>`).join('');
+
+      function landingPage() {
+        return `
+          <div class="landing-page">
+            <header class="site-header">
+              <div class="site-header__inner">
+                <a class="brand" href="#landing">BRAND_NAME</a>
+                <nav class="site-nav" aria-label="Prototype pages">
+                  <a href="#landing" aria-current="page">Landing</a>
+                  <a href="#workspace">Workspace</a>
+                  <a href="#results">Results</a>
+                </nav>
+                <a class="button" href="#workspace">Open workspace</a>
+              </div>
+            </header>
+            <main class="landing-main">
+              <section class="hero" aria-labelledby="hero-title">
+                <div><h1 id="hero-title" aria-label="TAGLINE_GOES_HERE">TAGLINE_<wbr>GOES_HERE</h1><p>PRODUCT_DESCRIPTION_GOES_HERE</p></div>
+                <div class="placeholder" aria-label="Hero placeholder">HERO_PLACEHOLDER</div>
+              </section>
+              <section class="section" aria-labelledby="clients-title">
+                <h2 id="clients-title">Our clients</h2>
+                <div class="placeholder-grid clients-grid">${placeholders('CLIENT_PLACEHOLDER', 5)}</div>
+              </section>
+              <section class="section" aria-labelledby="product-title">
+                <h2 id="product-title">Explore the product</h2>
+                <div class="preview-grid">
+                  <article class="preview-card"><div class="placeholder">WORKSPACE_PREVIEW_PLACEHOLDER</div><h3>Workspace</h3><a class="text-link" href="#workspace">Go to Workspace</a></article>
+                  <article class="preview-card"><div class="placeholder">RESULTS_PREVIEW_PLACEHOLDER</div><h3>Results</h3><a class="text-link" href="#results">Go to Results</a></article>
+                </div>
+              </section>
+              <section class="section" aria-labelledby="team-title">
+                <h2 id="team-title">Our team</h2>
+                <div class="placeholder-grid team-grid">${placeholders('TEAM_PLACEHOLDER', 4)}</div>
+              </section>
+              <section class="section" aria-labelledby="supporters-title">
+                <h2 id="supporters-title">Our supporters</h2>
+                <div class="placeholder-grid supporters-grid">${placeholders('SUPPORTER_PLACEHOLDER', 5)}</div>
+              </section>
+              <aside class="disclosure" aria-label="Research disclosure">
+                <span class="disclosure__icon" aria-hidden="true">i</span>
+                <div><strong>Simulated-persona / not-human-research disclosure</strong><p>Simulated-persona hypotheses, not validated human research.</p></div>
+              </aside>
+            </main>
+            <footer class="site-footer">
+              <div><strong>BRAND_NAME</strong><span>COMPANY_INFO_GOES_HERE</span></div>
+              <nav aria-label="Footer navigation"><a href="#landing">Landing</a><a href="#workspace">Workspace</a><a href="#results">Results</a></nav>
+            </footer>
+          </div>`;
+      }
+
+      function paperPage(key) {
+        const page = pages[key];
+        const hotspots = page.links.map(([target,label,x,y,w,h]) => `<a class="hotspot" href="#${target}" aria-label="${label}" title="${label}" style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"></a>`).join('');
+        return `<div class="paper-page"><nav class="paper-nav" aria-label="Prototype pages"><span>Paper prototype · click the sketched buttons</span><a href="#landing">Landing</a><a href="#workspace" ${key === 'workspace' ? 'aria-current="page"' : ''}>Workspace</a><a href="#results" ${key === 'results' ? 'aria-current="page"' : ''}>Results</a></nav><p class="hint"><a href="../index.html">Prepared assets + new brand logo</a> · <a href="../instructions.html">Workshop instructions</a><br>Layout sketch only. Use the supplied asset pack for the updated team, branding, and customer stories.</p><main class="paper-main"><div class="sheet"><img src="${page.image}" alt="${page.alt}">${hotspots}</div></main><footer class="paper-footer">Concept preview · fictional content and synthetic sample results</footer></div>`;
+      }
+
+      function render() {
+        const key = location.hash.slice(1);
+        document.getElementById('app').innerHTML = pages[key] ? paperPage(key) : landingPage();
+        document.body.className = pages[key] ? 'paper-page' : '';
+        window.scrollTo(0, 0);
+      }
+
+      const landingReference = 'landing.png';
+      addEventListener('hashchange', render);
+      render();
+    </script>
+  </body>
 </html>
